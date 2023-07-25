@@ -13,9 +13,8 @@ public class GuessingGameGUI extends JFrame {
     private JTextArea resultArea;
     private int randomNumber;
     private int playerBet;
-    private int totalMoney;
-    private int roundsPlayed;
-    private int[] roundResults; // Array to store the results of each round
+    private int totalMoney; // Keeps track of total money won or lost
+    private int roundCounter; // Keeps track of the number of rounds played
 
     public GuessingGameGUI() {
         // Set up the JFrame properties
@@ -28,7 +27,7 @@ public class GuessingGameGUI extends JFrame {
         // Initialize components
         betLabel = new JLabel("Enter your bet:");
         betField = new JTextField();
-        guessLabel = new JLabel("Enter your guess (1 or 2):");
+        guessLabel = new JLabel("Enter your guess (1-2):");
         guessField = new JTextField();
         playButton = new JButton("Play");
         resultArea = new JTextArea();
@@ -48,55 +47,56 @@ public class GuessingGameGUI extends JFrame {
                 playGame();
             }
         });
-
-        // Initialize game variables
-        totalMoney = 0;
-        roundsPlayed = 0;
-        roundResults = new int[10]; // Initialize the array to store 10 rounds of results
     }
 
     private void playGame() {
-        // Check if the maximum rounds (10) have been played
-        if (roundsPlayed >= 10) {
-            resultArea.setText("Game over! You played 10 rounds.\nTotal money: " + totalMoney + " coins.");
+        if (roundCounter < 10) {
+            // Get the player's bet and guess from the text fields
+            try {
+                playerBet = Integer.parseInt(betField.getText());
+                int playerGuess = Integer.parseInt(guessField.getText());
 
-            // Display round-by-round results
-            resultArea.append("\nRound-by-round results:");
-            for (int i = 0; i < 10; i++) {
-                resultArea.append("\nRound " + (i + 1) + ": " + roundResults[i] + " coins");
+                // Generate a random number between 1 and 2
+                randomNumber = new Random().nextInt(2) + 1;
+
+                // Determine if the player won or lost the bet
+                if (playerGuess == randomNumber) {
+                    totalMoney += playerBet; // Add the bet amount to totalMoney
+                    resultArea.setText("Congratulations! You guessed correctly!\nYou won " + playerBet + " coins.\n");
+                } else {
+                    totalMoney -= playerBet; // Subtract the bet amount from totalMoney
+                    resultArea.setText("Sorry, the correct number was " + randomNumber + ".\nYou lost " + playerBet + " coins.\n");
+                }
+
+                roundCounter++;
+
+                // Display remaining rounds and total money
+                resultArea.append("Rounds remaining: " + (10 - roundCounter) + "\nTotal Money: " + totalMoney + " coins.");
+            } catch (NumberFormatException ex) {
+                resultArea.setText("Please enter valid numbers for bet and guess.");
             }
-
-            playButton.setEnabled(false); // Disable the playButton after 10 rounds.
-            return;
+        } else {
+            // If 10 rounds are completed, show the final result and option to start a new round
+            resultArea.setText("Game Over!\nTotal Money: " + totalMoney + " coins.\n");
+            JButton newRoundButton = new JButton("Start New Round");
+            newRoundButton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    startNewRound();
+                }
+            });
+            add(newRoundButton);
+            newRoundButton.setEnabled(true); // enable the new round button 
         }
+    }
 
-        // Get the player's bet and guess from the text fields
-        try {
-            playerBet = Integer.parseInt(betField.getText());
-            int playerGuess = Integer.parseInt(guessField.getText());
-
-            // Generate a random number between 1 and 2
-            randomNumber = new Random().nextInt(2) + 1;
-
-            // Determine if the player won or lost the bet
-            if (playerGuess == randomNumber) {
-                totalMoney += playerBet;
-                resultArea.setText("Congratulations! You guessed correctly!\nYou won " + playerBet + " coins.");
-                roundResults[roundsPlayed] = playerBet; // Store the result of this round
-            } else {
-                totalMoney -= playerBet;
-                resultArea.setText("Sorry, the correct number was " + randomNumber + ".\nYou lost " + playerBet + " coins.");
-                roundResults[roundsPlayed] = -playerBet; // Store the result of this round
-            }
-
-            // Increment the rounds played
-            roundsPlayed++;
-
-            // Show remaining rounds and total money
-            resultArea.append("\nRounds played: " + roundsPlayed + " out of 10\nTotal money: " + totalMoney + " coins.");
-        } catch (NumberFormatException ex) {
-            resultArea.setText("Please enter valid numbers for bet and guess.");
-        }
+    private void startNewRound() {
+        // Reset the game for a new round
+        roundCounter = 0;
+        totalMoney = 0;
+        resultArea.setText("");
+        betField.setText("");
+        guessField.setText("");
+        playButton.setEnabled(true);
     }
 
     public static void main(String[] args) {
